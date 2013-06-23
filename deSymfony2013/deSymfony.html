@@ -1,0 +1,478 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Bodaclick una historia de SOA y ROA (caso real)</title>
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Marco Ferrari">
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/theme/serif.css" id="theme">
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+    <!--link rel="stylesheet" href="css/print/paper.css" type="text/css" media="print"-->
+    <link rel="stylesheet" href="css/print/pdf.css" type="text/css" media="print">
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="reveal">
+    <div style="position: absolute;top: 0.4em;right: 0.4em;font-size: 0.4em">deSymfony 2013</div>
+    <div style="position: absolute;top: 0.4em;left: 0.4em;font-size: 0.4em">Bodaclick, SOA / ROA - by Marco Ferrari</div>
+    <div class="slides">
+        <section>
+            <img src="./img/portadas.009.jpg" style="width: 90%">
+        </section>
+        <section>
+            <img src="./img/patrocinadores.jpg" style="width: 90%">
+        </section>
+        <section>
+            <h2>Links:</h2>
+            <a href="https://joind.in/8842">https://joind.in/8842</a><br>
+            <img src="./img/qr.png" style="">
+        </section>
+        <section>
+            <h2>Marco Ferrari</h2>
+            <img src="./img/bodaclick.jpg" style="">
+        </section>
+        <section>
+
+            <h2>Puntos:</h2>
+            <ul>
+                <li>¡La que liamos!</li>
+                <li>Piedras en el camino</li>
+                <li>ROA / REST</li>
+                <li>SOA</li>
+            </ul>
+        </section>
+        <section>
+            <h1>¡La que liamos!</h1>
+            <img src="./img/01.png" style="">
+        </section>
+        <section>
+            <h3>¡La que liamos!</h3>
+            <ul>
+                <li><i>Core</i>, un corazón a todo REST.</li>
+                <li class="fragment roll-in"><i>Accounts</i>, responsable de la comunicación con <i>Core</i> por lo que concierne las actividades básicas de usuario (alta, login, recuperar contraseña)</li>
+                <li class="fragment roll-in">8 X <i>Portal</i>, el proyecto más “raro” (no composer).</li>
+                <li class="fragment roll-in"><i>Intranet</i>, para las gestionar lo que pasa detrás del escenario.</li>
+                <li class="fragment roll-in">Un sistema de mensajería. Actualmente estamos usando <i>RabbitMQ</i>.</li>
+                <li class="fragment roll-in"><i>MySQL</i>, un cluster <i>MongoDB</i> y <i>Twemproxy</i> (Twitter) + <i>Redis</i>.</li>
+                <li class="fragment roll-in">Y ...<i>Jenkins</i>, <i>GitHub</i>, <i>Satis</i> y <i>Capifony + ANT</i>...</li>
+            </ul>
+        </section>
+        <section>
+            <h1>Piedras en el camino</h1>
+            <img src="./img/02.jpg" style="width: 40%">
+        </section>
+        <section>
+            <h3 style="margin-top: -5em">Piedras en el camino</h3>
+            <section>
+                <p>GitHub</p>
+                <img src="./img/angry_unicorn.png">
+            </section>
+            <section>
+                <p>GitHub (private) + Composer -> Satis</p>
+              <pre><code data-trim>
+{
+    "repositories": [
+        { "type": "composer", "url": "http://packages.example.org/" }
+    ],
+    "require": {
+    "company/package": "1.2.0",
+    "company/package2": "1.5.2",
+    "company/package3": "dev-master"
+    }
+}
+              </code></pre>
+            </section>
+            <section>
+                <p style="margin-top: 5em">Dos proyectos y un layout gráfico</p>
+                <img src="./img/03.png" style="width: 50%">
+            </section>
+            <section>
+                <p style="margin-top: 5em">CoreClientBundle 1</p>
+                <img src="./img/04.png" style="width: 40%">
+            </section>
+            <section>
+                <p style="margin-top: 5em">CoreClientBundle 2</p>
+                <pre><code data-trim>
+/**
+* Requests Legacy for retrieving the portal's full info
+*
+* @param String $domain domain name
+*
+* @return array
+* @throws \Guzzle\Http\Exception\ClientErrorResponseException
+*/
+public function getPortal($domain)
+{
+    $request = $this->client->get("v1.1/portals?domain=$domain");
+
+    $portal = $this->sendRequest($request, true);
+
+                </code></pre>
+            </section>
+            <section>
+                <p style="margin-top: 5em">CoreClientBundle 3</p>
+                <pre><code data-trim>
+public function directoryFilterAction(Request $request)
+{
+    $session = $this->get('session');
+    $portalCore = $this->get('session')->get('portal');
+
+    try {
+        $portal = $this->get("bdk_core_client.storefront_client")
+                    ->getPortal($portalCore->getDomain());
+    } catch (\Exception $e) {
+        $session->setFlash('error', 'An error has occurred.');
+    }
+                </code></pre>
+            </section>
+            <section>
+                <p style="margin-top: 5em">Portal</p>
+                <img src="./img/BDKPortalsComposer.png">
+            </section>
+            <section>
+                <p>Legacy</p>
+                <ul>
+                    <li>LegacyDbBundle</li>
+                    <li>LegacyBundle</li>
+                    <li>LegacyWsBundle</li>
+                </ul>
+            </section>
+            <section>
+                <p>Seguridad, sesiones y stickiness</p>
+                <ul>
+                    <li>WSSE</li>
+                    <li>Balanceo sin stickiness</li>
+                    <li>OAuth2</li>
+                    <li>Sesiones compartidas -> SncRedisBundle</li>
+                </ul>
+            </section>
+        </section>
+        <section>
+            <h1>¿ROA?</h1>
+            <img src="./img/roa.jpg" style="">
+            <br><span>&copy; ROA</span>
+        </section>
+        <section>
+            <h3 style="margin-top: -5em">Resource Oriented Architecture</h3>
+            <section>
+                <p>Definición</p>
+                <blockquote cite="http://www.artima.com/forums/flat.jsp?forum=126&thread=188545">
+                    "The ROA is a way of turning
+                    a problem into an arrangement of URIs, HTTP, and XML that
+                    works like the rest of the Web, and that programmers will enjoy using."
+                </blockquote>
+                <p>
+                &nbsp;<br/>
+                <small>by Leonard Richardson and Sam Ruby / RESTful WS</small>
+                </p>
+            </section>
+            <section>
+                <p>Recurso</p>
+                <blockquote cite="http://www.artima.com/forums/flat.jsp?forum=126&thread=188545">
+                    "A resource is anything that’s important enough to be referenced as a thing in itself."
+                </blockquote>
+                <p>
+                    &nbsp;<br/>
+                    <small>by Leonard Richardson and Sam Ruby / RESTful WS</small>
+                </p>
+            </section>
+            <section>
+                <p>Recursos -> URL</p>
+                <ul>
+                    <li>/api/secured/users/{slug} </li>
+                    <li>/api/public/users/{slug}</li>
+                </ul>
+            </section>
+            <section>
+                <p>Métodos</p>
+                <ul>
+                    <li>POST /api/secured/users/{slug}/edit</li>
+                    <li>POST /api/secured/users/{slug}?action=edit</li>
+                    <li>PUT /api/secured/users/{slug}  <- la que usamos</li>
+                </ul>
+            </section>
+            <section>
+                <p>Versiones / Filtros</p>
+                <ul>
+                    <li>GET /portals?domain={slug}</li>
+                    <li>GET /v1.1/portals?domain={slug}</li>
+                </ul>
+            </section>
+        </section>
+        <section>
+            <h1>¿Rest?</h1>
+            <img src="./img/rest.jpg" style="">
+            <br><span style="font-size: 0.5em">&copy; http://onthewillows.com/wp-content/uploads/2013/04/Rest.jpg</span>
+        </section>
+        <section>
+            <h3 style="margin-top: -5em">Representational State Transfer</h3>
+            <section>
+                <p>Definición</p>
+                <blockquote cite="http://www.artima.com/forums/flat.jsp?forum=126&thread=188545">
+                    “Architectural Styles and the Design of Network-based Software Architectures” and describes a series of constraints that exemplify how the web’s design emerged utilizing the Hyper Text Transfer Protocol.”<br>by Roy Fielding’s Doctoral Thesis
+                </blockquote>
+            </section>
+            <section>
+                <p>¿Por qué REST?</p>
+                <ul>
+                    <li>Simple</li>
+                    <li>Claro</li>
+                    <li>Bien soportado (trás librerías)</li>
+                    <li>Stateless</li>
+                </ul>
+            </section>
+            <section>
+                <p>Metodos</p>
+                <ul>
+                    <li>HEAD</li>
+                    <li>GET</li>
+                    <li>POST</li>
+                    <li>PUT</li>
+                    <li>PATCH</li>
+                    <li>DELETE</li>
+                </ul>
+            </section>
+            <section>
+                <p>Response</p>
+                <ul>
+                    <li>20X OK</li>
+                    <li>30X Algo ha cambiado</li>
+                    <li>40X Error recurso</li>
+                    <li>50X Error servidor</li>
+                </ul>
+            </section>
+            <section>
+                <p>Rest 1</p>
+                <ul>
+                    <li>GET  /api/secured/users -> <i>Lists all Users</i></li>
+                    <li>POST /api/secured/users -> <i>Creates a new Profile</i></li>
+                    <li>GET  /api/secured/users/{slug} -> <i>Finds and display a User</i></li>
+                    <li>PUT /api/secured/users/{slug} -> <i>Updates a Profile</i></li>
+                    <li>DELETE /api/secured/users/{slug} -> <i>Deletes a Profile</i></li>
+                </ul>
+            </section>
+            <section>
+                <p>Rest 2</p>
+                <ul>
+                    <li>GET  /api/v2/secured/enquiries -> <i>Action to get a list of enquiries</i></li>
+                    <li>GET  /api/v2/secured/enquiries/{id} -> <i>Action to get an enquiry by id</i></li>
+                    <li>DELETE  /api/v2/secured/enquiries/{id} -> <i>Delete an enquiry</i></li>
+                    <li>PATCH  /api/v2/secured/enquiries/{id}/accept -> <i>Accept an Enquiry</i></li>
+                    <li>PATCH  /api/v2/secured/enquiries/{id}/reject -> <i>Reject an Enquiry</i></li>
+                </ul>
+            </section>
+        </section>
+        <section>
+            <h1>¡SOA!</h1>
+            <img src="./img/soa.jpg" style="">
+            <br><span style="font-size: 0.5em">&copy; http://www.verexo.com/wp-content/uploads/2013/01/SOA-Fotolia_11660239_XS.jpg</span>
+        </section>
+        <section>
+            <h3 style="margin-top: -5em">Service Oriented Architecture</h3>
+            <section>
+                    <p>Definición</p>
+                    <blockquote cite="http://akfpartners.com/techblog/2008/04/08/soa-vs-roa/">
+                        “Service Oriented Architecture describes designing a system by modeling business processes as services or “actions”. Each service is a distinct unit of functionality and does not interact with the other services.”
+                    </blockquote>
+            </section>
+            <section>
+                <p>¿Por qué SOA?</p>
+                <p>Procesos recurrentes:</p>
+                <ul>
+                    <li>Mailing</li>
+                    <li>Comprobaciones</li>
+                    <li>Migraciones perezosas</li>
+                    <li>Tareas asíncronas</li>
+                    <li>Lógica de negocio</li>
+                </ul>
+            </section>
+            <section>
+                <p>Filosofía UNIX</p>
+                <p>Haz una cosa pero hazla bien</p>
+                <p>Bloques funcionales aislados,<br/>donde confinar la lógica de negocio.</p>
+            </section>
+            <section>
+                <pre style="margin-top: 2em"><code data-trim>
+public function createImageFromBinary($binaryString, $path, $filename)
+{
+    $image = imagecreatefromstring($binaryString);
+
+    if (!imagejpeg(
+            $image,
+            "{$this->uploadDirs[$path]['path']}"/$filename"
+        )) {
+        throw new \InvalidArgumentException(
+            "Path {$this->uploadDirs[$path]['path']}/$filename not exists"
+        );
+    }
+
+    return "$this->serverUrl{$this->uploadDirs[$path]['path']}/$filename";
+}
+                </code></pre>
+            </section>
+            <section>
+                <pre style="margin-top: 2em"><code data-trim>
+use BDK\CoreBundle\Model\Manager\ImageManager;
+// ..
+
+public function processImage($profile)
+{
+    $webImagePath = $this->imageManager->createImageFromBinary(
+        $profile->getPhoto(),
+        "profile_avatar",
+        sha1($profile->getUsername()) . ".jpg"
+    );
+    return $webImagePath;
+}
+                </code></pre>
+            </section>
+            <section>
+                <pre style="margin-top: 2em"><code data-trim>
+public function postUser(Request $request, $profileType)
+{
+    $legacyParams = $request->request->get('legacy');
+    $coreParams = $request->request->get('core');
+
+    //...
+
+    $legacyEntity = $this->userManager->createLegacyUser($legacyParams,
+                    $profileType);
+
+    $coreUser = $this->userManager->createCoreUser(
+    $coreParams,
+    $profileType,
+    ['Create', 'Default']
+    );
+    $legacyEntity->setNewID($coreUser->getUser()->getId());
+    //...
+                </code></pre>
+            </section>
+            <section>
+                <pre style="margin-top: 2em"><code data-trim>
+public function postNovioAction(Request $request)
+{
+    $view = FOSView::create();
+    $viewData = $this->container->get('bdk.legacy.rest_manager')
+                    ->postUser($request, ProfileType::USER);
+
+    return $view->setStatusCode($viewData['status'])
+                    ->setData($viewData['data']);
+}
+                </code></pre>
+            </section>
+            <section>
+                <pre style="margin-top: 2em"><code data-trim>
+public function update(ServiceFormClass $serviceFormClass,
+                    $serviceType, $flush = true)
+{
+    $serviceClass = ServiceFormClass::SERVICE_TYPE;
+    //...
+
+    $service = $this->loadService($serviceClass, $serviceFormClass);
+    $this->dm->persist($service);
+
+    if (true === $flush) {
+        $this->dm->flush();
+    }
+
+    return $service;
+}
+                </code></pre>
+            </section>
+            <section>
+                <pre style="margin-top: 2em"><code data-trim>
+use BDK\WeddingBundle\Model\Manager\ServiceManager;
+//...
+
+public function process()
+{
+    $this->form->bind($this->params);
+
+    //...
+    $service = $this->form->getData();
+    $serviceType =
+        ($service->type == null ? $this->serviceType : $service->type);
+    return $this->serviceManager->update($service, $serviceType);
+}
+                </code></pre>
+            </section>
+        </section>
+        <section>
+            <h2>Marco Ferrari</h2>
+            <blockquote cite="http://akfpartners.com/techblog/2008/04/08/soa-vs-roa/">
+                “I'm a Web Worker.<br>
+                I'm interested in networking (the largest meaning).<br>Drive an information through TCP/IP or web services...<br> ...it doesn't matter.” by Me
+            </blockquote>
+            <br>
+            <ul>
+                <li>G+ Symfony</li>
+                <li>Github: marco-msg-ferrari</li>
+                <li>@ferrari_marco</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Q & A</h2>
+            <img src="./img/tux_question.png"/>
+            <img src="./img/tux-teacher.png">
+        </section>
+    </div>
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.min.js"></script>
+
+<script>
+
+    // Full list of configuration options available here:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        width: 1024,
+        height: 768,
+        margin: 0,
+        minScale: 0.1,
+        maxScale: 1.0,
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+            { src: 'lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            } },
+            { src: 'plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            } },
+            { src: 'plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            } },
+            { src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+                hljs.initHighlightingOnLoad();
+            } },
+            { src: 'plugin/zoom-js/zoom.js', async: true, condition: function () {
+                return !!document.body.classList;
+            } },
+            { src: 'plugin/notes/notes.js', async: true, condition: function () {
+                return !!document.body.classList;
+            } }
+            // { src: 'plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+            // { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+    });
+
+</script>
+
+</body>
+</html>
